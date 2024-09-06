@@ -18,34 +18,33 @@ class Node:
     
 
     def receive(self,receivedMessage):
-        if receivedMessage[0] == Message.CORDINATE:
-            return (Message.NOPE, self.id)
-        
         match receivedMessage[0]:
             case Message.OK:
                 return (Message.NOPE, self.id)
             case Message.ELECTION:
-                print(receivedMessage)
+               
                 if receivedMessage[1] < self.id:
                     self.inform()
-                    self.respond(receivedMessage[1])
+                    
+                    return ( (Message.OK,self.id) )
+        
                 return (Message.NOPE, self.id)
             case Message.CORDINATE:
-                print(receivedMessage[1])
+                print(receivedMessage)
                 self.leaderID = receivedMessage[1]
+        
                 
 
     def inform(self):
         #for alle id'er højere end mig selv, send en election.
-        for connection in connections[self.id:]:
+        answered = False
+        for connection in connections[self.id+1:]:
             receivemes = connection.receive( (Message.ELECTION, self.id) )
+            self.receive(receivemes)
             if receivemes[0] != Message.NOPE:
-                return
-        self.coordinate()
-
-
-    def respond(self,id ):
-        connections[id].receive( (Message.OK, self.id))
+                answered = True
+        if not answered:
+            self.coordinate()
         
     def coordinate(self):
         for connection in connections:
